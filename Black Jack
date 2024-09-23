@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple Blackjack Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #1e1e1e;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      text-align: center;
+    }
+    button {
+      padding: 10px;
+      margin: 5px;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .message {
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Blackjack</h1>
+  <div id="player-hand">Player Hand: 0</div>
+  <div id="dealer-hand">Dealer Hand: 0</div>
+  <div class="message" id="message">Press "Hit" to play!</div>
+  <button onclick="hit()">Hit</button>
+  <button onclick="stand()">Stand</button>
+  <button onclick="resetGame()">Reset</button>
+</div>
+
+<script>
+  let playerHand = [];
+  let dealerHand = [];
+  let deck = [];
+  let isGameOver = false;
+
+  // Create and shuffle the deck
+  function createDeck() {
+    const suits = ['Hearts', 'Diamonds', 'Clubs', 'Spades'];
+    const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+    const deck = [];
+    
+    for (let suit of suits) {
+      for (let value of values) {
+        deck.push({ value, suit });
+      }
+    }
+
+    // Shuffle the deck
+    return deck.sort(() => Math.random() - 0.5);
+  }
+
+  // Get the numeric value of a card
+  function getCardValue(card) {
+    if (['K', 'Q', 'J'].includes(card.value)) {
+      return 10;
+    } else if (card.value === 'A') {
+      return 11; // Ace can be 11, but adjusted to 1 if needed
+    }
+    return parseInt(card.value);
+  }
+
+  // Calculate the total hand value
+  function getHandValue(hand) {
+    let value = hand.reduce((sum, card) => sum + getCardValue(card), 0);
+    let aces = hand.filter(card => card.value === 'A').length;
+
+    // Adjust for Aces (make them worth 1 if hand is over 21)
+    while (value > 21 && aces > 0) {
+      value -= 10;
+      aces--;
+    }
+
+    return value;
+  }
+
+  // Deal a card to the player
+  function hit() {
+    if (isGameOver) return;
+
+    playerHand.push(deck.pop());
+    updateHands();
+
+    if (getHandValue(playerHand) > 21) {
+      document.getElementById('message').innerText = "You busted! Dealer wins.";
+      isGameOver = true;
+    }
+  }
+
+  // Dealer plays when the player stands
+  function stand() {
+    if (isGameOver) return;
+
+    while (getHandValue(dealerHand) < 17) {
+      dealerHand.push(deck.pop());
+    }
+
+    updateHands();
+    determineWinner();
+    isGameOver = true;
+  }
+
+  // Determine the winner
+  function determineWinner() {
+    const playerScore = getHandValue(playerHand);
+    const dealerScore = getHandValue(dealerHand);
+
+    if (dealerScore > 21) {
+      document.getElementById('message').innerText = "Dealer busted! You win!";
+    } else if (playerScore > dealerScore) {
+      document.getElementById('message').innerText = "You win!";
+    } else if (playerScore < dealerScore) {
+      document.getElementById('message').innerText = "Dealer wins!";
+    } else {
+      document.getElementById('message').innerText = "It's a tie!";
+    }
+  }
+
+  // Update the displayed hands
+  function updateHands() {
+    document.getElementById('player-hand').innerText = `Player Hand: ${getHandValue(playerHand)}`;
+    document.getElementById('dealer-hand').innerText = `Dealer Hand: ${getHandValue(dealerHand)}`;
+  }
+
+  // Reset the game and deal new hands
+  function resetGame() {
+    deck = createDeck();
+    playerHand = [deck.pop(), deck.pop()];
+    dealerHand = [deck.pop(), deck.pop()];
+    isGameOver = false;
+    updateHands();
+    document.getElementById('message').innerText = "Press 'Hit' or 'Stand' to play!";
+  }
+
+  // Start the game by resetting the deck and hands
+  resetGame();
+</script>
+
+</body>
+</html>
